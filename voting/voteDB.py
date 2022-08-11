@@ -39,6 +39,9 @@ def getVote(vid: int):
     return db.executeF1("SELECT CreatorID, Question, GuildID, ChannelID, Type, NumWinners "
                         "FROM Votes WHERE VoteID = %s;", vid)
 
+def getNextCloseVote():
+    return db.executeF1("SELECT VoteID, CloseTime FROM Votes "
+                        "ORDER BY CloseTime;")
 
 def getMsgVote(mid: int):
     return db.executeF1("SELECT M.VoteID, Part, Type, VoteLimit, PollStage "
@@ -126,6 +129,9 @@ def getUserVoteCount(vid: int, choice: int = None, uid: int = None) -> Union[int
 def getVoterCount(vid: int):
     return db.executeF1("SELECT COUNT(DISTINCT UserID) FROM Votes V JOIN UserVote UV USING (VoteID) WHERE VoteID = %s", vid)[0]
 
+def getVoterIDs(vid: int):
+    voters = db.executeFAll("SELECT DISTINCT UserID FROM Votes V JOIN UserVote UV USING (VoteID) WHERE VoteID = %s", vid)
+    return voters
 
 def getUserNextPref(vid: int, uid: int):
     vs = db.executeFAll("SELECT COALESCE(MAX(Preference), -1) FROM UserVote WHERE VoteID = %s AND UserID = %s;", vid, uid)
@@ -139,9 +145,9 @@ def getUserPref(vid: int, uid: int, choice: int):
 
 def allowedEnd(vid: int, uid: int):
     vs = db.executeFAll("SELECT EXISTS(SELECT 1 FROM Votes WHERE VoteID = %s AND CreatorID = %s);", vid, uid)
-    return extract1Val(vs, False)
-
-
+    allowed = extract1Val(vs, False)
+    return allowed
+    
 @db.with_commit
 def updateStage(vid: int, stage: int):
     db.execute("UPDATE Votes SET PollStage = %s WHERE VoteID = %s;", stage, vid)

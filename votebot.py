@@ -1,16 +1,17 @@
 import datetime
 import os
 from typing import Optional
+import asyncio
 
 import discord
 from discord.ext.commands import when_mentioned_or, CommandNotFound, has_permissions, NoPrivateMessage, Bot, \
-    ExpectedClosingQuoteError
+    ExpectedClosingQuoteError, MissingRole, MissingAnyRole, MissingRequiredArgument
 
 from react_decorators import *
 from voting import voteDB
 
-TOKEN = os.getenv('DISCORD_TOKEN')
-
+# Prod
+TOKEN = '' 
 intents = discord.Intents.default()
 intents.reactions = True
 intents.members = True
@@ -50,23 +51,6 @@ async def prefix(ctx, prefix: Optional[str]):
         await ctx.send(f"Prefix changed to `{prefix}`")
 
 
-@has_permissions(administrator=True)
-@bot.command(name="purge", help="Removes messages older than the given number of days. Limited to checking 100 messages per call.")
-@done_react
-@wait_react
-async def purge(ctx: Context, days: int, limit: int = 100):
-    date = ctx.message.created_at - datetime.timedelta(days=days)
-
-    def check(m: discord.Message, deleted=[0]):
-        if deleted[0] >= limit: return False
-        r = m.created_at <= date
-        if r: deleted[0] += 1
-        return r
-
-    print(f"Purging {limit} messages before {date}.")
-    await ctx.channel.purge(limit=100, check=check)
-
-
 # VC
 @bot.event
 async def on_voice_state_update(member, before, after):
@@ -91,6 +75,10 @@ async def on_command_error(ctx, error):
         pass
     elif isinstance(error, NoPrivateMessage):
         await ctx.send("Cannot run this command in DMs")
+    elif isinstance(error, (MissingRole, MissingAnyRole)):
+        await ctx.send("You are not allowed to do that!")
+    elif isinstance(error, MissingRequiredArgument):
+        await ctx.send("You are missing a required parameter! (Most likely vote id)")
     elif isinstance(error, ExpectedClosingQuoteError):
         await ctx.send(f"Mismatching quotes, {str(error)}")
     elif hasattr(error, "original"):

@@ -8,7 +8,7 @@ BUILD_PATH = join(".", "db", "build.sql")
 try: DATABASE_URL = os.environ['DATABASE_URL']
 except KeyError: DATABASE_URL = None
 
-conn = psycopg2.connect(DATABASE_URL)
+conn = psycopg2.connect(host=DATABASE_URL)
 
 # cxn = connect(DB_PATH, check_same_thread=False)
 cur = conn.cursor()
@@ -74,6 +74,11 @@ def executeFAll(command, *values):
     cur.execute(command, tuple(values))
     return cur.fetchall()
 
+def executeFallIn(command, values):
+    cur.mogrify(command + " %s;", 
+        tuple([row[0] for row in values]))
+    cur.execute(command, tuple(values))
+    return cur.fetchall()
 
 def multiexec(command, valueset):
     return cur.executemany(command, valueset)

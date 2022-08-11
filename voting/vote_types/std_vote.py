@@ -312,7 +312,7 @@ class StdVote:
             options[i] = text
 
         sections = [StdVote.top_n_results(num_win, options, votes, title="Winners")]
-        if num_win < 5: sections.append(StdVote.top_n_results(5, options, votes))
+        #if num_win < 5: sections.append(StdVote.top_n_results(5, options, votes))
         sections.append(StdVote.list_results(options, list(range(len(options))), votes))
 
         return sections

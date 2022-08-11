@@ -13,10 +13,17 @@ CREATE TABLE IF NOT EXISTS Votes (
     PollStage INTEGER NOT NULL,
     Type INTEGER NOT NULL,
     NumWinners INTEGER DEFAULT 1,
+    NumVoters INTEGER,
+    CloseTime INTEGER,
     CreationDate TIMESTAMP DEFAULT NOW()
 );
+
+-- ALTER TABLE Votes ADD COLUMN IF NOT EXISTS NumVoters INTEGER;
+-- ALTER TABLE Votes ADD COLUMN IF NOT EXISTS CloseTime INTEGER;
 -- Stage: 0 = Created, 1 = Posted, 2 = Reactions added - running, -1 = Finished
 -- Type: 0 = Quick Poll, 1 = Standard Poll, 2 = STV Poll
+-- NumVoter min. number of voters
+-- CloseTime Epoch of when to close the poll
 
 CREATE TABLE IF NOT EXISTS Options (
     VoteID BIGINT,
@@ -41,4 +48,9 @@ CREATE TABLE IF NOT EXISTS UserVote (
     Preference INTEGER NOT NULL,
     PRIMARY KEY (VoteID, UserID, Choice),
     FOREIGN KEY (VoteID) REFERENCES Votes(VoteID) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS Admins (
+    GuildID BIGINT NOT NULL,
+    DcRole BIGINT
 );
